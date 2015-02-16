@@ -1,6 +1,7 @@
 __author__ = 'raphi'
 import xml.etree.ElementTree as ET
 from MediaInfo.MediaInfo import MediaFile
+import time
 from HttpApi.HttpApi import HttpConn
 import operator
 
@@ -9,9 +10,9 @@ def parseXML(xmlfile, conn, intrusive, interval):
     root = ET.fromstring(xmlfile)
     for video in root:
         medias = list(video.iter("Media"))
-        validity = 0  
+        validity = 0
         if interval != 0:
-            validity = part.attrib["addedAt"] + interval * 1.5 - localtime()
+            validity = float(video.attrib["addedAt"]) + interval * 1.5 - time.time()
         if validity < 0:
             continue
         if len(medias) > 1:
