@@ -5,10 +5,15 @@ from HttpApi.HttpApi import HttpConn
 import operator
 
 
-def parseXML(xmlfile, conn, intrusive):
+def parseXML(xmlfile, conn, intrusive, interval):
     root = ET.fromstring(xmlfile)
     for video in root:
         medias = list(video.iter("Media"))
+        validity = 0  
+        if interval != 0:
+            validity = part.attrib["addedAt"] + interval * 1.5 - localtime()
+        if validity < 0:
+            continue
         if len(medias) > 1:
             print("Duplicate, one needs to be deleted")
             __solveDuplicates(video, conn, intrusive)
