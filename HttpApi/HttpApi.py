@@ -33,7 +33,7 @@ class HttpConn:
         for section in sections:
             connection = http.client.HTTPConnection(self.host + ":32400")
             connection.request("GET", "/library/sections/" + section + "/recentlyAdded?" + self.token)
-            sectionoverview.append(connection.getresponse().readnew())
+            sectionoverview.append(connection.getresponse().readall())
         return sectionoverview
     def updateItem(self, itemid, labels):
         connection = http.client.HTTPConnection(self.host + ":32400")
