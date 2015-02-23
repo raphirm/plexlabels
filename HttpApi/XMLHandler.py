@@ -27,28 +27,55 @@ def parseXML(xmlfile, conn, intrusive, interval):
                             print("deleting item " + video.attrib["key"])
                             conn.deleteItem(video.attrib["key"])
                         else:
-                            print("updating item " + video.attrib["key"] + " with labels " + ', '.join(labels))
+                            labels.append("movie")
                             conn.updateItem(video.attrib["key"], labels)
+                            print("updating item " + video.attrib["key"] + " with labels " + ', '.join(labels))
                     else:
                         if not labels:
                             print("deleting item " + video.attrib["key"])
                             print("i didn't do it, no worries")
                         else:
+                            labels.append("movie")
                             print("updating item " + video.attrib["key"] + " with labels " + ', '.join(labels))
                             print("i didn't do it, no worries")
 
 
 def __solveDuplicates(video, conn, intrusive):
     mediaLabels = {}
+    mediaLabelss = {}
     for media in video:
         for part in media:
             labels = __getLables(part)
             print(media.attrib["id"])
             mediaLabels[media.attrib["id"]] = len(labels)
+            mediaLabelss[media.attrib["id"]] = labels
     sorted_labels = sorted(mediaLabels, key=mediaLabels.__getitem__)
+    print(mediaLabelss);
+    labelsToMovie = {}
+    selectedMovies = []
+    for key in mediaLabelss:
+           for lang in mediaLabelss[key]:
+              movieArray = []
+              if lang in labelsToMovie: 
+               movieArray=labelsToMovie[lang]
+              movieArray.append(key)
+              labelsToMovie[lang] = movieArray 
+    print(labelsToMovie)
+    for lang in labelsToMovie:
+        if len(labelsToMovie[lang]) == 1:
+         selectedMovies.append(labelsToMovie[lang][0])
+    for lang in labelsToMovie:
+        if len(labelsToMovie[lang]) != 1:
+         if set(selectedMovies) & set(labelsToMovie[lang]): 
+          print("Already exclusive, cool, discard")
+         else:
+          print("Add first to selectedMovies")
+          selectedMovies.append(labelsToMovie[lang][0])
+         print("Whats up?:" + ", ".join(labelsToMovie[lang]) + " and " + ", ".join(selectedMovies))
+    print(selectedMovies)
     for media in video:
         for part in media:
-            if media.attrib["id"] == sorted_labels[0]:
+            if media.attrib["id"] in selectedMovies:
                 labels = __getLables(part)
                 if intrusive:
                     if not labels:
@@ -56,6 +83,7 @@ def __solveDuplicates(video, conn, intrusive):
                         conn.deleteItem(video.attrib["key"])
                     else:
                         print("updating item " +video.attrib["key"] + " with labels " + ', '.join(labels))
+                        labels.append("movie")
                         conn.updateItem(video.attrib["key"], labels)
                 else:
                     if not labels:
