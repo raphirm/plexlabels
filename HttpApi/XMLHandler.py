@@ -77,5 +77,5 @@ def __solveDuplicates(video, conn, intrusive):
 def __getLables(part):
     mediaFile = MediaFile(part.attrib["file"])
     labels = mediaFile.getLabels();
-
+    labels.append("movie")
     return labels
