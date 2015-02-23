@@ -28,6 +28,7 @@ def parseXML(xmlfile, conn, intrusive, interval):
                             conn.deleteItem(video.attrib["key"])
                         else:
                             print("updating item " + video.attrib["key"] + " with labels " + ', '.join(labels))
+                            labels.append("movie")
                             conn.updateItem(video.attrib["key"], labels)
                     else:
                         if not labels:
@@ -56,6 +57,7 @@ def __solveDuplicates(video, conn, intrusive):
                         conn.deleteItem(video.attrib["key"])
                     else:
                         print("updating item " +video.attrib["key"] + " with labels " + ', '.join(labels))
+                        labels.append("movie")
                         conn.updateItem(video.attrib["key"], labels)
                 else:
                     if not labels:
@@ -77,5 +79,4 @@ def __solveDuplicates(video, conn, intrusive):
 def __getLables(part):
     mediaFile = MediaFile(part.attrib["file"])
     labels = mediaFile.getLabels();
-    labels.append("movie")
     return labels
