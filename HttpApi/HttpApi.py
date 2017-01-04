@@ -24,7 +24,7 @@ class HttpConn:
         sections = self.sections.split(",")
         for section in sections:
             connection = http.client.HTTPConnection(self.host + ":32400")
-            connection.request("GET", "/library/sections/" + section + "/all?" + self.token)
+            connection.request("GET", "/library/sections/" + section + "/all?duplicate=1&" + self.token)
             sectionoverview.append(connection.getresponse().read())
         return sectionoverview
     def getnew(self):
@@ -38,7 +38,7 @@ class HttpConn:
     def updateItem(self, itemid, labels):
         connection = http.client.HTTPConnection(self.host + ":32400")
         connection.request("GET", itemid+"?"+self.token);
-        item = connection.getresponse().readall()
+        item = connection.getresponse().read()
         updatestring = parseItem(item, labels)
 
 
@@ -109,13 +109,15 @@ def parseItem(item, lls):
                 updatestring = "?"
             else:
                 updatestring = updatestring + "&"
-            updatestring = updatestring + "label[" + repr(j) + "].tag.tag=" + label + ".audio" + "&collection[" + repr(
-                i) + "].tag.tag=" + label + ".audio"
+            updatestring = updatestring + "label[" + repr(
+                i) + "].tag.tag=" + label
             j = j + 1
             i = i + 1
+    #updatestring = "?label[0].tag.tag=movie&collection[0].tag.tag=movie"
     #print(updatestring)
+
     if manual == True:
         print("Ignoring element because its tagged as manual tag")
         return "True"
     else:
-        return updatestring
+        return updatestring.encode("ascii", "ignore").decode()

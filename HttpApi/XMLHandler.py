@@ -18,13 +18,13 @@ def parseXML(xmlfile, conn, intrusive, interval):
             continue
         mediacontainer = ET.fromstring(conn.getItem(video.attrib["key"]))
         vid = Video(mediacontainer, conn)
+        vid.deleteUnnessessaryContent()
         labels = vid.getLabels()
-        for media in vid.media:
-            print(media.midAudio)
-            print(media.midSub)
-        if len(medias) > 1:
-            print("Duplicate, one needs to be deleted")
-            __solveDuplicates(video, conn, intrusive)
+        conn.updateItem(video.attrib["key"], labels)
+        print(labels)
+        # if len(medias) > 1:
+        #     print("Duplicate, one needs to be deleted")
+        #     __solveDuplicates(video, conn, intrusive)
 
 
 def __solveDuplicates(video, conn, intrusive):

@@ -4,12 +4,14 @@ from MediaInfo.MediaInfo import MediaFile
 import time
 from HttpApi.HttpApi import HttpConn
 import operator
+import re
 
 
 class Video:
     def __init__(self, video, conn):
         if "ratingKey" in video[0].attrib:
-            self.videoID = video[0].attrib['ratingKey']
+            self.video = video
+            self.videoID = video[0].attrib['key']
             self.conn = conn
             self.media = []
             for m in video.findall("./Video/Media"):
@@ -28,15 +30,40 @@ class Video:
 
         labels = list(set(sub)|set(audio))
         return labels
+    def deleteUnnessessaryContent(self):
+        #If no English or German is under the supported languages (and Unknown, because w don't know) Delete the item directly!, f* french people!
+        acceptedLanuages = ["eng.stereo.Audio", "ger.stereo.Audio", "ger.surround.Audio", "eng.surround.Audio", "eng.Subtitle", "ger.Subtitle", "Unknown.Audio"]
+        if set(self.getLabels()).isdisjoint(acceptedLanuages):
+            #self.conn.deleteItem(self.videoID)
+            print("delete-item "+self.videoID+"now...?")
+        if len(self.media) >1:
+            print("duplicates, need to analyse duplicates")
+            highscore = 0
+            winner = ''
+            for m in self.media:
+                score = m.getRating()
+                if score > highscore:
+                    highscore = score
+                    winner = m
+
+
 class Media:
     def __init__(self, media, conn):
         if 'id' in media.attrib:
             mid = media.attrib['id']
             self.id = mid
             self.midAudio = []
+            if 'videoResolution' in media.attrib:
+                self.resolution = int(media.attrib["videoResolution"])
+            else:
+                self.resolution = 0
             for element in media.findall("./Part/*[@streamType='2']"):
                 if 'language' in element.attrib:
-                    self.midAudio.append(element.attrib["language"])
+                    if int(element.attrib["channels"]) > 4:
+                        self.midAudio.append(element.attrib["languageCode"]+".surround")
+                    else:
+                        self.midAudio.append(element.attrib["languageCode"]+".stereo")
+
                     # print(mid + " " + element.attrib["language"])
                 else:
                     self.midAudio.append("Unknown")
@@ -44,7 +71,7 @@ class Media:
             self.midSub = []
             for element in media.findall("./Part/*[@streamType='3']"):
                 if 'language' in element.attrib:
-                    self.midSub.append(element.attrib["language"])
+                    self.midSub.append(element.attrib["languageCode"])
                     # print(mid + " " + element.attrib["language"])
                 else:
                     self.midSub.append("Unknown")
@@ -53,3 +80,45 @@ class Media:
         else:
             print("Media has no id")
             self.id = 'not a valid Media created'
+
+    def getRating(self):
+        score = 0
+        scoreslang = {
+            'deu' : 1000,
+            'eng'  : 100,
+
+        }
+        scoreschan = {
+            'surround': 100,
+            'stereo' : 10
+        }
+       # print (self.resolution)
+
+
+        for audio in self.midAudio:
+            lang = audio.split("." )
+            langpoints = 1
+            chanpoints = 1
+            if len(lang) > 1:
+                if(scoreslang.get(lang[0])):
+                    langpoints = scoreslang.get(lang[0])
+                if(scoreschan.get(lang[1])):
+                    chanpoints = scoreschan.get(lang[1])
+            points = langpoints * chanpoints
+            score = score + points * 100
+           # print(lang)
+
+        for subtitle in self.midSub:
+            langpoints = 1
+            if(scoreslang.get(subtitle)):
+                langpoints = scoreslang.get(subtitle)
+            score = score + langpoints
+           # print(subtitle)
+        if self.resolution >= 1080:
+            score = score *10
+        elif self.resolution >= 720:
+            score = score *5
+        else:
+            score =score *1
+        print(score)
+        return 0
