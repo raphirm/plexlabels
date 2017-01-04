@@ -4,7 +4,8 @@ from MediaInfo.MediaInfo import MediaFile
 import time
 from HttpApi.HttpApi import HttpConn
 import operator
-
+from HttpApi.MultimediaClasses import Video
+from HttpApi.MultimediaClasses import Media
 
 def parseXML(xmlfile, conn, intrusive, interval):
     root = ET.fromstring(xmlfile)
@@ -15,29 +16,15 @@ def parseXML(xmlfile, conn, intrusive, interval):
             validity = float(video.attrib["addedAt"]) + interval * 1.5 - time.time()
         if validity < 0:
             continue
+        mediacontainer = ET.fromstring(conn.getItem(video.attrib["key"]))
+        vid = Video(mediacontainer, conn)
+        labels = vid.getLabels()
+        for media in vid.media:
+            print(media.midAudio)
+            print(media.midSub)
         if len(medias) > 1:
             print("Duplicate, one needs to be deleted")
             __solveDuplicates(video, conn, intrusive)
-        else:
-            for media in video:
-                for part in media:
-                    labels = __getLables(part)
-                    if intrusive:
-                        if not labels:
-                            print("deleting item " + video.attrib["key"])
-                            conn.deleteItem(video.attrib["key"])
-                        else:
-                            labels.append("movie")
-                            conn.updateItem(video.attrib["key"], labels)
-                            print("updating item " + video.attrib["key"] + " with labels " + ', '.join(labels))
-                    else:
-                        if not labels:
-                            print("deleting item " + video.attrib["key"])
-                            print("i didn't do it, no worries")
-                        else:
-                            labels.append("movie")
-                            print("updating item " + video.attrib["key"] + " with labels " + ', '.join(labels))
-                            print("i didn't do it, no worries")
 
 
 def __solveDuplicates(video, conn, intrusive):

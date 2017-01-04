@@ -1,5 +1,4 @@
 __author__ = 'raphi'
-from MediaInfo.MediaInfo import MediaFile
 from HttpApi.XMLHandler import parseXML
 from HttpApi.HttpApi import HttpConn
 
