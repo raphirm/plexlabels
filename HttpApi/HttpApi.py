@@ -24,7 +24,7 @@ class HttpConn:
         sections = self.sections.split(",")
         for section in sections:
             connection = http.client.HTTPConnection(self.host + ":32400")
-            connection.request("GET", "/library/sections/" + section + "/all?duplicate=1&" + self.token)
+            connection.request("GET", "/library/sections/" + section + "/all?" + self.token)
             sectionoverview.append(connection.getresponse().read())
         return sectionoverview
     def getnew(self):

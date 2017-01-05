@@ -34,17 +34,37 @@ class Video:
         #If no English or German is under the supported languages (and Unknown, because w don't know) Delete the item directly!, f* french people!
         acceptedLanuages = ["eng.stereo.Audio", "ger.stereo.Audio", "ger.surround.Audio", "eng.surround.Audio", "eng.Subtitle", "ger.Subtitle", "Unknown.Audio"]
         if set(self.getLabels()).isdisjoint(acceptedLanuages):
-            #self.conn.deleteItem(self.videoID)
+            self.conn.deleteItem(self.videoID)
             print("delete-item "+self.videoID+"now...?")
         if len(self.media) >1:
-            print("duplicates, need to analyse duplicates")
-            highscore = 0
-            winner = ''
-            for m in self.media:
-                score = m.getRating()
-                if score > highscore:
-                    highscore = score
-                    winner = m
+            missinglabels = self.getLabels()
+            candidates = list(self.media)
+            keepers = []
+            while len(missinglabels) > 0:
+
+               # print("duplicates, need to analyse duplicates")
+                highscore = 0
+                winner = ''
+                for m in candidates:
+                    score = m.getRating()
+                    if score > highscore:
+                        highscore = score
+                        winner = m
+
+                missinglabelsafter =[ item for item in missinglabels if item not in winner.labels]
+
+                if len(missinglabels) == len(missinglabelsafter):
+                    candidates.remove(winner)
+                else:
+                    keepers.append(winner)
+                    candidates.remove(winner)
+                    missinglabels = missinglabelsafter
+                    if len(missinglabels) > 0:
+                        print("not all labels are OK, missing: " + str(missinglabelsafter))
+            tobedeleted = [ item for item in self.media if item not in keepers]
+            for element in tobedeleted:
+                print (str(element)+" will get deleted")
+                self.conn.deleteMedia(element.id, self.videoID)
 
 
 class Media:
@@ -54,7 +74,10 @@ class Media:
             self.id = mid
             self.midAudio = []
             if 'videoResolution' in media.attrib:
-                self.resolution = int(media.attrib["videoResolution"])
+                try:
+                    self.resolution = int(media.attrib["videoResolution"])
+                except ValueError:
+                    self.resolution = 0
             else:
                 self.resolution = 0
             for element in media.findall("./Part/*[@streamType='2']"):
@@ -76,7 +99,7 @@ class Media:
                 else:
                     self.midSub.append("Unknown")
                     # print(mid + " " + "Unkown")
-
+            self.labels = [s + ".Subtitle" for s in self.midSub] + [s + ".Audio" for s in self.midAudio]
         else:
             print("Media has no id")
             self.id = 'not a valid Media created'
@@ -120,5 +143,5 @@ class Media:
             score = score *5
         else:
             score =score *1
-        print(score)
-        return 0
+        #print(score)
+        return score
